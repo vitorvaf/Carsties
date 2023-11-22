@@ -9,3 +9,16 @@ services:
       POSTGRES_DB: auctions
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+  mongodb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: mongopw
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/var/lib/mongodb/data  
+volumes:
+    postgres-data:
+    mongo-data:
+  
