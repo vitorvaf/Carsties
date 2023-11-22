@@ -1,13 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Entities;
+using Polly;
+using Polly.Extensions.Http;
 using SearchService;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetRetryPolicy());
 
 var app = builder.Build();
 
-await DbInitializer.InitDb(app);
+app.Lifetime.ApplicationStarted.Register(async () =>
+{
+    try
+    {
+        await DbInitializer.InitDb(app);
+    }
+    catch (Exception ex)
+    {        
+        Console.WriteLine(ex);
+    }
+});
+
 
 app.MapGet("/api/search", async ([AsParameters] SearchParams searchParams) =>
 {
@@ -58,4 +72,13 @@ app.MapGet("/api/search", async ([AsParameters] SearchParams searchParams) =>
 });
 
 app.Run();
+
+
+static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+{
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+        .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(3));
+}
 
