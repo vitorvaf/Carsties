@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
-using MongoDB.Entities;
+using MassTransit;
 using Polly;
 using Polly.Extensions.Http;
 using SearchService;
@@ -7,6 +6,20 @@ using SearchService;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetRetryPolicy());
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host("localhost", "/", h => {
+            h.Username("admin");
+            h.Password("admin");
+        });
+
+        cfg.ConfigureEndpoints(context);
+
+    });
+});
 
 var app = builder.Build();
 
