@@ -8,14 +8,16 @@ namespace SearchService;
 public class AuctionCreatedConsumer : IConsumer<AuctionCreated>
 {
     private readonly IMapper _mapper;
+    private readonly ILogger<AuctionCreatedConsumer> _logger;
 
-    public AuctionCreatedConsumer(IMapper mapper)
+    public AuctionCreatedConsumer(IMapper mapper, ILogger<AuctionCreatedConsumer> logger)
     {
         _mapper = mapper;
+        _logger = logger;
     }
     public async Task Consume(ConsumeContext<AuctionCreated> context)
     {
-        Console.WriteLine($"AuctionCreatedConsumer: {context.Message.Id}");
+        _logger.LogInformation($"--> Comsuming auction created. AuctionCreated: {context.Message.Id}");       
         
         var item = _mapper.Map<Item>(context.Message);
 

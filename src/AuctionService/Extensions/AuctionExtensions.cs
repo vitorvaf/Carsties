@@ -3,6 +3,8 @@ using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,8 +60,9 @@ public static class AuctionExtensions
         #region CreateAuction
 
         app.MapPost("/api/auctions", async (
-            AuctionDbContext _context,
             IMapper _mapper,
+            IPublishEndpoint _publishEndpoint,
+            AuctionDbContext _context,
             CreateAuctionDto createAuctionDtoauctionDto) =>
         {
             var auction = _mapper.Map<Auction>(createAuctionDtoauctionDto);
@@ -69,6 +72,11 @@ public static class AuctionExtensions
             auction.Seller = "test";
 
             _context.Auctions.Add(auction);
+
+            var newAuction = _mapper.Map<AuctionDto>(auction);
+            
+            _ = _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
+
             var result = await _context.SaveChangesAsync() > 0;
 
             if (!result)

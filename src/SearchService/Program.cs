@@ -11,12 +11,21 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddMassTransit(x =>
 {
-    x.AddActivitiesFromNamespaceContaining<AuctionCreatedConsumer>();
+    //Ler documentação para entender como é criada a fila
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
 
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
 
     x.UsingRabbitMq((context, cfg) =>
     {
+        cfg.ReceiveEndpoint("search-auction-created", e =>
+        {
+            e.UseMessageRetry(r => r.Interval(5, 5));
+            e.ConfigureConsumer<AuctionCreatedConsumer>(context);
+            // e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
+            // e.ConfigureConsumer<AuctionDeletedConsumer>(context);
+        });
+
         cfg.Host("localhost", "/", h => {
             h.Username("admin");
             h.Password("admin");
