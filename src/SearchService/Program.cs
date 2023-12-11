@@ -11,7 +11,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddMassTransit(x =>
 {
-    //Ler documentação para entender como é criada a fila
+    //Ler documentação para entender como são criadas as filas a partir dessa declaração
     x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
 
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
@@ -21,9 +21,19 @@ builder.Services.AddMassTransit(x =>
         cfg.ReceiveEndpoint("search-auction-created", e =>
         {
             e.UseMessageRetry(r => r.Interval(5, 5));
-            e.ConfigureConsumer<AuctionCreatedConsumer>(context);
-            // e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
-            // e.ConfigureConsumer<AuctionDeletedConsumer>(context);
+            e.ConfigureConsumer<AuctionCreatedConsumer>(context);        
+        });
+
+        cfg.ReceiveEndpoint("search-auction-updated", e =>
+        {
+            e.UseMessageRetry(r => r.Interval(5, 5));            
+            e.ConfigureConsumer<AuctionUpdatedConsumer>(context);            
+        });
+
+          cfg.ReceiveEndpoint("search-auction-deleted", e =>
+        {
+            e.UseMessageRetry(r => r.Interval(5, 5));            
+            e.ConfigureConsumer<AuctionDeletedConsumer>(context);            
         });
 
         cfg.Host("localhost", "/", h => {

@@ -90,8 +90,10 @@ public static class AuctionExtensions
 
         #region UpdateAuction
 
-        app.MapPut("/api/auctions/{id}", async (
-            AuctionDbContext _context,            
+        _ = app.MapPut("/api/auctions/{id}", async (
+            AuctionDbContext _context,
+            IMapper _mapper,
+            IPublishEndpoint _publishEndpoint,
             UpdateAuctionDto updateAuctionDto,
             Guid id) =>
         {
@@ -111,6 +113,10 @@ public static class AuctionExtensions
             auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
             auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
+            var auctionUpdated = _mapper.Map<AuctionDto>(auction);
+
+            _ = _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auctionUpdated));
+
             var result = await _context.SaveChangesAsync() > 0;
 
             if (!result)
@@ -124,8 +130,9 @@ public static class AuctionExtensions
 
         #region DeleteAuction
 
-        app.MapDelete("/api/auctions/{id}", async (
+        _ = app.MapDelete("/api/auctions/{id}", async (
             AuctionDbContext _context,
+            IPublishEndpoint _publishEndpoint,
             Guid id) =>
         {
 
@@ -137,6 +144,12 @@ public static class AuctionExtensions
             }
 
             _context.Auctions.Remove(auction);
+
+            AuctionDeleted auctionDeleted = new()
+            {
+                Id = auction.Id.ToString()
+            };
+            _ = _publishEndpoint.Publish<AuctionDeleted>(auctionDeleted);
 
             var result = await _context.SaveChangesAsync() > 0;
 
