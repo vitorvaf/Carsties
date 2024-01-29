@@ -1,4 +1,5 @@
-﻿using AuctionService.Data;
+﻿using System.Security.Claims;
+using AuctionService.Data;
 using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
@@ -63,13 +64,13 @@ public static class AuctionExtensions
             IMapper _mapper,
             IPublishEndpoint _publishEndpoint,
             AuctionDbContext _context,
-            CreateAuctionDto createAuctionDtoauctionDto) =>
+            CreateAuctionDto createAuctionDtoauctionDto,
+            ClaimsPrincipal user) =>
         {
             var auction = _mapper.Map<Auction>(createAuctionDtoauctionDto);
             auction.Id = Guid.NewGuid();
 
-            //TODO: add current user as seller
-            auction.Seller = "test";
+            auction.Seller = user.Identity?.Name;
 
             _context.Auctions.Add(auction);
 
@@ -84,7 +85,8 @@ public static class AuctionExtensions
 
             return Results.Created(
                 $"/api/auctions/{auction.Id}", _mapper.Map<AuctionDto>(auction));
-        });
+
+        }).RequireAuthorization();
 
         #endregion
 
@@ -95,7 +97,8 @@ public static class AuctionExtensions
             IMapper _mapper,
             IPublishEndpoint _publishEndpoint,
             UpdateAuctionDto updateAuctionDto,
-            Guid id) =>
+            Guid id,
+            ClaimsPrincipal user) =>
         {
 
             var auction = await _context.Auctions
@@ -106,6 +109,11 @@ public static class AuctionExtensions
             {
                 return Results.NotFound();
             }
+
+            if(auction.Seller != user.Identity?.Name)
+            {
+                return Results.Forbid();
+            }   
 
             auction.Item.Make = updateAuctionDto.Make ?? auction.Item.Make;
             auction.Item.Model = updateAuctionDto.Model ?? auction.Item.Model;
@@ -123,7 +131,7 @@ public static class AuctionExtensions
                 return Results.BadRequest();
 
             return Results.Ok();
-        });
+        }) .RequireAuthorization();
 
 
         #endregion
@@ -133,7 +141,8 @@ public static class AuctionExtensions
         _ = app.MapDelete("/api/auctions/{id}", async (
             AuctionDbContext _context,
             IPublishEndpoint _publishEndpoint,
-            Guid id) =>
+            Guid id,
+            ClaimsPrincipal user) =>
         {
 
             var auction = await _context.Auctions.FirstOrDefaultAsync(x => x.Id == id);
@@ -141,6 +150,11 @@ public static class AuctionExtensions
             if (auction == null)
             {
                 return Results.BadRequest();
+            }
+
+            if(auction.Seller != user.Identity?.Name)
+            {
+                return Results.Forbid();
             }
 
             _context.Auctions.Remove(auction);
@@ -157,7 +171,7 @@ public static class AuctionExtensions
                 return Results.BadRequest();
 
             return Results.NoContent();
-        });
+        }).RequireAuthorization();
 
         #endregion
 
