@@ -12,7 +12,7 @@ public class Auction
 
     public int? SoldAmount { get; set; }
 
-    public int? CurrentHigBid { get; set; }
+    public int? CurrentHighBid { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -23,7 +23,5 @@ public class Auction
     public Status Status { get; set; }
 
     public Item Item { get; set; }
-
-
-
+    
 }

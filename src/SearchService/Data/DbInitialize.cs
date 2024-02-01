@@ -10,7 +10,7 @@ public static class DbInitializer
     {
         try
         {
-            await DB.InitAsync("SeatchDb", MongoClientSettings
+            await DB.InitAsync("SearchDb", MongoClientSettings
                 .FromConnectionString(app.Configuration.GetConnectionString("MongoDbConnection")));
 
             await DB.Index<Item>()

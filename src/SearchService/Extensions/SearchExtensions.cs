@@ -11,6 +11,7 @@ public static class SearchExtensions
             var query = DB.PagedSearch<Item, Item>();
 
             query.Sort(x => x.Ascending(a => a.Make));
+            
 
             if (!string.IsNullOrEmpty(searchParams.SearchTerm))
                 query.Match(Search.Full, searchParams.SearchTerm).SortByTextScore();
