@@ -11,7 +11,7 @@ internal static class HostingExtensions
 {
     public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddRazorPages();        
+        builder.Services.AddRazorPages();
 
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -28,6 +28,11 @@ internal static class HostingExtensions
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
 
+                if (builder.Environment.IsEnvironment("Docker"))
+                {
+                    options.IssuerUri = "identity-svc";
+                }
+
                 // see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
                 options.EmitStaticAudienceClaim = true;
             })
@@ -38,10 +43,10 @@ internal static class HostingExtensions
             .AddProfileService<CustomProfileService>();
 
         builder.Services.ConfigureApplicationCookie(options =>
-        {            
-            options.Cookie.SameSite = SameSiteMode.Lax;            
-        });    
-        
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
+
         builder.Services.AddAuthentication()
             .AddGoogle(options =>
             {
@@ -56,11 +61,11 @@ internal static class HostingExtensions
 
         return builder.Build();
     }
-    
+
     public static WebApplication ConfigurePipeline(this WebApplication app)
-    { 
+    {
         app.UseSerilogRequestLogging();
-    
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -70,7 +75,7 @@ internal static class HostingExtensions
         app.UseRouting();
         app.UseIdentityServer();
         app.UseAuthorization();
-        
+
         app.MapRazorPages()
             .RequireAuthorization();
 
