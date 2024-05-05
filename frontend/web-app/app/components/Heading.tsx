@@ -6,7 +6,7 @@ type Props = {
     center?: boolean;
 }
 
-export default function Heading({ title, subTitle, center }: Props) {
+export default function Heading({ title, subTitle, center }: Readonly<Props>) {
 
     return (
         <div className={center ? 'text-center' : 'text-start'}>
